@@ -2,9 +2,7 @@
 #include <fstream>
 using namespace std;
 
-void macroVariables() {
-    
-}
+
 
 int main() {
     // INITIALISE SIMULATION PARAMETERS:
@@ -144,9 +142,9 @@ int main() {
                 fProp[(x - 1 + nx) % nx][y][3]   = f[x][y][3];             
                 fProp[x][y-1][4]                 = f[x][y][4];
                 fProp[(x + 1) % nx][y+1][5]      = f[x][y][5];
-                fProp[(x + 1) % nx][y-1][6]      = f[x][y][6];
-                fProp[(x - 1 + nx) % nx][y+1][7] = f[x][y][7];
-                fProp[(x - 1 + nx) % nx][y-1][8]      = f[x][y][8]; 
+                fProp[(x + 1) % nx][y+1][6]      = f[x][y][6];
+                fProp[(x - 1 + nx) % nx][y-1][7] = f[x][y][7];
+                fProp[(x + 1) % nx][y-1][8]      = f[x][y][8]; 
                 
             }
         }
