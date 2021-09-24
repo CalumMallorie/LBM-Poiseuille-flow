@@ -40,7 +40,7 @@ int main() {
                 fEq[x][y][i] = w[i] - 0.5*3.*w[i]*(cx[i]*xForce[x][y] + cy[i]*yForce[x][y]);
                 fProp[x][y][i] = w[i] - 0.5*3.*w[i]*(cx[i]*xForce[x][y] + cy[i]*yForce[x][y]);
                 f[x][y][i] = w[i] - 0.5*3.*w[i]*(cx[i]*xForce[x][y] + cy[i]*yForce[x][y]);
-                S[nx][ny][nQ] = 0.; // initialsise with zero source term
+                S[x][y][i] = 0.; // initialsise with zero source term
             }
         }
     }
