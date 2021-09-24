@@ -10,10 +10,10 @@ int main() {
     // INITIALISE SIMULATION PARAMETERS:
     const int nx = 5; int ny = 25; // domain size
     const int n_t = 64000; // timesteps
-    const double tau = 0.933012701892219; // relaxation time
+    const double tau = 1.; // relaxation time
     const double omega = 1/tau; // collision operator
-    const double forceDensity = 0.0046; // force density
-    const int density = 1.; // density
+    const double forceDensity = 1.e-5; // force density
+    const int density = 1; // density
 
     // LATTICE PARAMETERS:
     int nQ = 9; // number of velocities
@@ -96,15 +96,15 @@ int main() {
         // compute forcing source term
         for (int x = 0; x < nx; x++) { // loop over arrays to update rho, u and v using eq_6.2
             for (int y = 0; y < ny; y++) {
-                S[x][y][0] = (1. - omega/2)*(w[0]*3*(cx[0]*xForce[x][y] + cx[0]*yForce[x][y]));
-                S[x][y][1] = (1. - omega/2)*(w[1]*3*(cx[1]*xForce[x][y] + cx[1]*yForce[x][y]));
-                S[x][y][2] = (1. - omega/2)*(w[2]*3*(cx[2]*xForce[x][y] + cx[2]*yForce[x][y]));
-                S[x][y][3] = (1. - omega/2)*(w[3]*3*(cx[3]*xForce[x][y] + cx[3]*yForce[x][y]));
-                S[x][y][4] = (1. - omega/2)*(w[4]*3*(cx[4]*xForce[x][y] + cx[4]*yForce[x][y]));
-                S[x][y][5] = (1. - omega/2)*(w[5]*3*(cx[5]*xForce[x][y] + cx[5]*yForce[x][y]));
-                S[x][y][6] = (1. - omega/2)*(w[6]*3*(cx[6]*xForce[x][y] + cx[6]*yForce[x][y]));
-                S[x][y][7] = (1. - omega/2)*(w[7]*3*(cx[7]*xForce[x][y] + cx[7]*yForce[x][y]));
-                S[x][y][8] = (1. - omega/2)*(w[8]*3*(cx[8]*xForce[x][y] + cx[8]*yForce[x][y]));
+                S[x][y][0] = (1. - omega/2)*(w[0]*3*(cx[0]*xForce[x][y] + cy[0]*yForce[x][y]));
+                S[x][y][1] = (1. - omega/2)*(w[1]*3*(cx[1]*xForce[x][y] + cy[1]*yForce[x][y]));
+                S[x][y][2] = (1. - omega/2)*(w[2]*3*(cx[2]*xForce[x][y] + cy[2]*yForce[x][y]));
+                S[x][y][3] = (1. - omega/2)*(w[3]*3*(cx[3]*xForce[x][y] + cy[3]*yForce[x][y]));
+                S[x][y][4] = (1. - omega/2)*(w[4]*3*(cx[4]*xForce[x][y] + cy[4]*yForce[x][y]));
+                S[x][y][5] = (1. - omega/2)*(w[5]*3*(cx[5]*xForce[x][y] + cy[5]*yForce[x][y]));
+                S[x][y][6] = (1. - omega/2)*(w[6]*3*(cx[6]*xForce[x][y] + cy[6]*yForce[x][y]));
+                S[x][y][7] = (1. - omega/2)*(w[7]*3*(cx[7]*xForce[x][y] + cy[7]*yForce[x][y]));
+                S[x][y][8] = (1. - omega/2)*(w[8]*3*(cx[8]*xForce[x][y] + cy[8]*yForce[x][y]));
             }
         }
 
