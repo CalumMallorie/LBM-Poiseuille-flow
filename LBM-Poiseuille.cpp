@@ -3,7 +3,6 @@
 using namespace std;
 
 
-
 int main() {
     // INITIALISE SIMULATION PARAMETERS:
     const int nx = 5; int ny = 25; // domain size
@@ -56,6 +55,7 @@ int main() {
                 velV[x][y] = fProp[x][y][2] + fProp[x][y][5] + fProp[x][y][6] - fProp[x][y][4] - fProp[x][y][7] - fProp[x][y][8] +  yForce[x][y]/2;
             }
         }
+
 
         // check convergence:
         double sum = 0.0;
@@ -166,7 +166,7 @@ int main() {
     }
 
 
- std::ofstream out("test.csv");
+ std::ofstream out("velocityU_field.csv");
 
 for (auto& row : velU) {
   for (auto col : row)
