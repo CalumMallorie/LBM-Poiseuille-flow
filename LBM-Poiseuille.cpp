@@ -1,10 +1,11 @@
 #include <iostream>
 #include <fstream>
+#include <math.h> 
 using namespace std;
 
 // GLOBAL SIMULATION PARAMETERS:
-const int nx = 5; const int ny = 25; // domain size
-const int n_t = 64000; // timesteps
+const int nx = 50; const int ny = 50; // domain size
+const int n_t = 64000; // max timesteps
 const double tau = 1.; // relaxation time
 const double omega = 1/tau; // collision operator
 const double forceDensity = 1.e-5; // force density
@@ -18,21 +19,14 @@ const int cy[9] = {0, 0, 1, 0, -1, 1, 1, -1, -1};
 
 // DECLARE FUNCTIONS
 void computeMacros(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny], 
-double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]);
-
+    double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]);
 void initialiseArrays(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny],
- double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny], double f[nx][ny][nQ], double S[nx][ny][nQ]);
-
+    double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny], double f[nx][ny][nQ], double S[nx][ny][nQ]);
 void computeEquilibrium(double fEq[nx][ny][nQ], double rho[nx][ny], double velU[nx][ny], double velV[nx][ny]);
-
 void computeForcing(double S[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]);
-
 void computeCollisions(double f[nx][ny][nQ], double fEq[nx][ny][nQ], double fProp[nx][ny][nQ], double S[nx][ny][nQ]);
-
 void computePeriodicBC(double f[nx][ny][nQ]);
-
 void computeStreaming(double f[nx][ny][nQ], double fProp[nx][ny][nQ]);
-
 void computeBounceBackBC(double f[nx][ny][nQ], double fProp[nx][ny][nQ]);
 
 
@@ -48,12 +42,10 @@ int main() {
     double velU[nx][ny]; double velV[nx][ny]; // x- and y- velocities
     double rho[nx][ny]; // density
     double fEq[nx][ny][nQ]; double fProp[nx][ny][nQ]; double f[nx][ny][nQ]; // distributions
-    
-    initialiseArrays(rho, fEq, velU, velV, fProp, xForce, yForce, f, S);
+    initialiseArrays(rho, fEq, velU, velV, fProp, xForce, yForce, f, S); // set all arrays to initial values
 
     // MAIN LOOP
     for (int t = 1; t < n_t; t++) {
-
         // compute macroscopic variables:
         computeMacros(rho, fEq, velU, velV, fProp, xForce, yForce);
 
@@ -70,46 +62,42 @@ int main() {
         avgU = sum / size;
         if (abs(avgU-avgU_old) < tolerance) {
             cout << "Tolerance criteria reached." << endl;
-            break; // stop main loop if tolerance is met
-            
+            break; // stop main loop if tolerance is met  
         } else {
             avgU_old = avgU; // update average u at t = t-dt
         }
         
-        // compute equilibrium distributions using eq_4.38
+        // compute equilibrium distributions using eq_4.38:
         computeEquilibrium(fEq, rho, velU, velV);
 
-        // compute forcing source term
+        // compute forcing source term:
         computeForcing(S, xForce, yForce);
 
-        // compute collisions 
+        // compute collisions: 
         computeCollisions(f, fEq, fProp, S);
 
-        // apply periodic boundary conditions using virtual nodes at x = 0 and x = nx, using eq_5.15
+        // apply periodic boundary conditions using virtual nodes at x = 0 and x = nx, using eq_5.15:
         computePeriodicBC(f);
 
-        // compute streaming step
+        // compute streaming step:
         computeStreaming(f, fProp);
 
-        // apply bounce-back boundary conditions at top and bottom walls
+        // apply bounce-back boundary conditions at top and bottom walls:
         computeBounceBackBC(f, fProp);
 
-        cout << avgU << endl;
+        // output average velocity and timestep to console:
+        if (t%1000 == 0) {
+        cout << "t = " << t << ", " << "avgU = " << avgU << endl;
+        }
     }
 
-
- std::ofstream out("velocityU_field.csv");
-
-for (auto& row : velU) {
-  for (auto col : row)
-    out << col <<',';
-  out << '\n';
-
-}
-   
-    
-    
-
+    // save final velocity 
+    std::ofstream out("velocityU_field.csv");
+    for (auto& row : velU) {
+    for (auto col : row)
+        out << col <<',';
+    out << '\n';
+    }
 
     return 0;
 }
