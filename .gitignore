@@ -1,0 +1,7 @@
+# Compiled source #
+###################
+*.exe
+
+# Simulation output #
+###################
+*.csv
