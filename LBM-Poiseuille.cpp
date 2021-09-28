@@ -102,6 +102,7 @@ int main() {
     return 0;
 }
 
+// FUNCTIONS: 
 void computeMacros(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny], double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]) {
         for (int x = 0; x < nx; x++) { // loop over arrays to update rho, u and v using eq_6.2
             for (int y = 0; y < ny; y++) {
@@ -131,7 +132,7 @@ void initialiseArrays(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx
 }
 
 void computeEquilibrium(double fEq[nx][ny][nQ], double rho[nx][ny], double velU[nx][ny], double velV[nx][ny]) {
-    for (int x = 0; x < nx; x++) {
+    for (int x = 0; x < nx; x++) { // this is using linear equilibrium, should update to use quadratic equation asap. 
         for (int y = 0; y < ny; y++) {
             fEq[x][y][0] = w[0]*(rho[x][y] + 3*(velU[x][y]*cx[0] + velV[x][y]*cy[0]));
             fEq[x][y][1] = w[1]*(rho[x][y] + 3*(velU[x][y]*cx[1] + velV[x][y]*cy[1]));
@@ -195,12 +196,12 @@ void computeStreaming(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
     for (int x = 0; x < nx; x++) { 
         for (int y = 1; y < ny-1; y++) {
             fProp[x][y][0]                   = f[x][y][0];
-            fProp[(x + 1) % nx][y][1]        = f[x][y][1];
-            fProp[x][y+1][2]                 = f[x][y][2];
-            fProp[(x - 1 + nx) % nx][y][3]   = f[x][y][3];             
+            fProp[(x + 1) % nx][y][1]        = f[x][y][1]; // mod operators essentially shift right directions (1, 5, 8) right by one ...
+            fProp[x][y+1][2]                 = f[x][y][2]; // ... and left directions (3, 6, 7) left by one ... 
+            fProp[(x - 1 + nx) % nx][y][3]   = f[x][y][3]; // ... which fits with the periodic boundary condition. 
             fProp[x][y-1][4]                 = f[x][y][4];
-            fProp[(x + 1) % nx][y+1][5]      = f[x][y][5];
-            fProp[(x + 1) % nx][y+1][6]      = f[x][y][6];
+            fProp[(x + 1) % nx][y+1][5]      = f[x][y][5]; // y value is also increased/decreased depending on whether direction is up (2, 6, 5) or down (4, 7, 8)
+            fProp[(x - 1 + nx) % nx][y+1][6] = f[x][y][6];
             fProp[(x - 1 + nx) % nx][y-1][7] = f[x][y][7];
             fProp[(x + 1) % nx][y-1][8]      = f[x][y][8]; 
             
