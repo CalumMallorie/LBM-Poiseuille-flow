@@ -1,109 +1,10 @@
+#include "LBM.hh"
 #include <iostream>
-#include <fstream>
-
-using namespace std;
-
-// GLOBAL SIMULATION PARAMETERS:
-const int nx = 50; const int ny = 50; // domain size
-const int n_t = 64000; // max timesteps
-const double tau = 1.; // relaxation time
-const double omega = 1/tau; // collision operator
-const double forceDensity = 1.e-5; // force density
-const int density = 1; // density
-
-// GLOBAL LATTICE PARAMETERS:
-const int nQ = 9; // number of velocities
-const double w[9] = {4./9., 1./9., 1./9., 1./9., 1./9., 1./36., 1./36., 1./36., 1./36.}; // lattice weights
-const int cx[9] = {0, 1, 0, -1, 0, 1, -1, -1, 1};
-const int cy[9] = {0, 0, 1, 0, -1, 1, 1, -1, -1};
-
-// DECLARE FUNCTIONS
-void computeMacros(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny], 
-    double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]);
-void initialiseArrays(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny],
-    double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny], double f[nx][ny][nQ], double S[nx][ny][nQ]);
-void computeEquilibrium(double fEq[nx][ny][nQ], double rho[nx][ny], double velU[nx][ny], double velV[nx][ny]);
-void computeForcing(double S[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]);
-void computeCollisions(double f[nx][ny][nQ], double fEq[nx][ny][nQ], double fProp[nx][ny][nQ], double S[nx][ny][nQ]);
-void computePeriodicBC(double f[nx][ny][nQ]);
-void computeStreaming(double f[nx][ny][nQ], double fProp[nx][ny][nQ]);
-void computeBounceBackBC(double f[nx][ny][nQ], double fProp[nx][ny][nQ]);
-
-
-int main() {
-  
-    // CONVERGENCE PARAMETERS
-    double tolerance = 1.0e-12; // tolerance
-    double avgU_old = 100; // initialise stored average velocity for comparison
-
-    // INITIALISE ARRAYS
-    double xForce[nx][ny]; double yForce[nx][ny]; // x- and y- forcing
-    double S[nx][ny][nQ]; // forcing source term
-    double velU[nx][ny]; double velV[nx][ny]; // x- and y- velocities
-    double rho[nx][ny]; // density
-    double fEq[nx][ny][nQ]; double fProp[nx][ny][nQ]; double f[nx][ny][nQ]; // distributions
-    initialiseArrays(rho, fEq, velU, velV, fProp, xForce, yForce, f, S); // set all arrays to initial values
-
-    // MAIN LOOP
-    for (int t = 1; t < n_t; t++) {
-        // compute macroscopic variables:
-        computeMacros(rho, fEq, velU, velV, fProp, xForce, yForce);
-
-        // check convergence:
-        double sum = 0.0;
-        double size = 0.0;
-        double avgU; // average x velocity
-        for (int x = 0; x < nx; x++) {
-            for (int y = 0; y < ny; y++) {
-                sum += velU[x][y];
-                size++;
-            }
-        }
-        avgU = sum / size;
-        if (abs(avgU-avgU_old) < tolerance) {
-            cout << "Tolerance criteria reached." << endl;
-            break; // stop main loop if tolerance is met  
-        } else {
-            avgU_old = avgU; // update average u at t = t-dt
-        }
-        
-        // compute equilibrium distributions using eq_4.38:
-        computeEquilibrium(fEq, rho, velU, velV);
-
-        // compute forcing source term:
-        computeForcing(S, xForce, yForce);
-
-        // compute collisions: 
-        computeCollisions(f, fEq, fProp, S);
-
-        // apply periodic boundary conditions using virtual nodes at x = 0 and x = nx, using eq_5.15:
-        computePeriodicBC(f);
-
-        // compute streaming step:
-        computeStreaming(f, fProp);
-
-        // apply bounce-back boundary conditions at top and bottom walls:
-        computeBounceBackBC(f, fProp);
-
-        // output average velocity and timestep to console:
-        if (t%1000 == 0) {
-        cout << "t = " << t << ", " << "avgU = " << avgU << endl;
-        }
-    }
-
-    // save final velocity 
-    std::ofstream out("velocityU_field.csv");
-    for (auto& row : velU) {
-    for (auto col : row)
-        out << col <<',';
-    out << '\n';
-    }
-
-    return 0;
-}
 
 // FUNCTIONS: 
-void computeMacros(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny], double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]) {
+
+// compute macroscopic variables:
+void LBM::computeMacros(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny], double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]) {
         for (int x = 0; x < nx; x++) { // loop over arrays to update rho, u and v using eq_6.2
             for (int y = 0; y < ny; y++) {
                 rho[x][y] = fEq[x][y][0] + fEq[x][y][1] + fEq[x][y][2] + fEq[x][y][3] + fEq[x][y][4] + fEq[x][y][5] + fEq[x][y][6] + fEq[x][y][7] + fEq[x][y][8];
@@ -113,7 +14,9 @@ void computeMacros(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][n
         }
     }
 
-void initialiseArrays(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny],
+
+// set all arrays to initial values
+void LBM::initialiseArrays(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx][ny], double velV[nx][ny],
  double fProp[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny], double f[nx][ny][nQ], double S[nx][ny][nQ]) {
     for (int x = 0; x < nx; x++) { // loop over arrays to set initial values
         for (int y = 0; y < ny; y++) {
@@ -131,7 +34,8 @@ void initialiseArrays(double rho[nx][ny], double fEq[nx][ny][nQ], double velU[nx
     }
 }
 
-void computeEquilibrium(double fEq[nx][ny][nQ], double rho[nx][ny], double velU[nx][ny], double velV[nx][ny]) {
+// compute equilibrium distributions using eq_4.38:
+void LBM::computeEquilibrium(double fEq[nx][ny][nQ], double rho[nx][ny], double velU[nx][ny], double velV[nx][ny]) {
     for (int x = 0; x < nx; x++) { // this is using linear equilibrium, should update to use quadratic equation asap. 
         for (int y = 0; y < ny; y++) {
             fEq[x][y][0] = w[0]*(rho[x][y] + 3*(velU[x][y]*cx[0] + velV[x][y]*cy[0]));
@@ -146,8 +50,8 @@ void computeEquilibrium(double fEq[nx][ny][nQ], double rho[nx][ny], double velU[
         }
     }
 }
-
-void computeForcing(double S[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]) {
+// compute forcing source term:
+void LBM::computeForcing(double S[nx][ny][nQ], double xForce[nx][ny], double yForce[nx][ny]) {
     for (int x = 0; x < nx; x++) { // loop over arrays to update rho, u and v using eq_6.2
         for (int y = 0; y < ny; y++) {
             S[x][y][0] = (1. - omega/2)*(w[0]*3*(cx[0]*xForce[x][y] + cy[0]*yForce[x][y]));
@@ -163,7 +67,7 @@ void computeForcing(double S[nx][ny][nQ], double xForce[nx][ny], double yForce[n
     }
 }
 
-void computeCollisions(double f[nx][ny][nQ], double fEq[nx][ny][nQ], double fProp[nx][ny][nQ], double S[nx][ny][nQ]) {
+void LBM::computeCollisions(double f[nx][ny][nQ], double fEq[nx][ny][nQ], double fProp[nx][ny][nQ], double S[nx][ny][nQ]) {
     for (int x = 0; x < nx; x++) { // loop over arrays to compute post-collision distributions, using eq_3.9 + S[x][y][n]
         for (int y = 0; y < ny; y++) {
             f[x][y][0] = (1. - omega)*fProp[x][y][0] + omega*fEq[x][y][0] + S[x][y][0];
@@ -179,7 +83,8 @@ void computeCollisions(double f[nx][ny][nQ], double fEq[nx][ny][nQ], double fPro
     }
 }
 
-void computePeriodicBC(double f[nx][ny][nQ]) {
+// apply periodic boundary conditions using virtual nodes at x = 0 and x = nx, using eq_5.15:
+void LBM::computePeriodicBC(double f[nx][ny][nQ]) {
     for (int y = 0; y < ny; y++) {
             // set f(near side) =  f(far side)
             f[0][y][1] = f[nx-2][y][1];
@@ -192,7 +97,8 @@ void computePeriodicBC(double f[nx][ny][nQ]) {
         }
 }
 
-void computeStreaming(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
+// compute streaming step:
+void LBM::computeStreaming(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
     for (int x = 0; x < nx; x++) { 
         for (int y = 1; y < ny-1; y++) {
             fProp[x][y][0]                   = f[x][y][0];
@@ -209,7 +115,8 @@ void computeStreaming(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
     }
 }
 
-void computeBounceBackBC(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
+// apply bounce-back boundary conditions at top and bottom walls:
+void LBM::computeBounceBackBC(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
     for (int x = 0; x < nx; x++) {
         // top wall
         fProp[x][ny-1][4] = f[x][ny-1][2];
@@ -220,4 +127,19 @@ void computeBounceBackBC(double f[nx][ny][nQ], double fProp[nx][ny][nQ]) {
         fProp[x][0][5] = f[x][0][7];
         fProp[x][0][6] = f[x][0][8];
     }
+}
+
+// compute average x-velocity
+double LBM::computeAvgVelocity(double velU[nx][ny]) {
+    double sum = 0.0;
+    double size = 0.0;
+    double avgU; // average x velocity
+    for (int x = 0; x < nx; x++) {
+        for (int y = 0; y < ny; y++) {
+            sum += velU[x][y];
+            size++;
+        }
+    }
+    avgU = sum / size;
+    return avgU; 
 }
